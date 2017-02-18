@@ -1,1 +1,1 @@
-"Repository for hosting gjango apps and related content"
+"Repository for hosting Django apps and related content"
