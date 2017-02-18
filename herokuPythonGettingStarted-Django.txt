@@ -1,0 +1,102 @@
+#cd to project directory
+heroku create             #equivalent to : `heroku git:remote -a <your-app-name>`
+git push heroku master
+heroku ps:scale web=1
+heroku open
+
+
+######################### LOGGING ##############################
+heroku logs --tail        #Ctrl + C to terminate
+  #Flags for logs
+   ▸     -a, --app APP       # app to run command against
+   ▸     -d, --dyno DYNO     # dyno to limit filter by
+   ▸     -n, --num NUM       # number of lines to display
+   ▸     -r, --remote REMOTE # git remote of app to run command against
+   ▸     -s, --source SOURCE # log source to limit filter by
+   ▸     -t, --tail          # continually stream logs
+   ▸     --force-colors      # force use of colors (even on non-tty output)
+  
+# Use a Procfile, a text file in the root directory of your application, to explicitly declare what command should be executed to start your app.
+# SCALE
+#dynos - 55 hours a week free circa Feb'17
+#number of current dynos
+heroku ps
+#upscale, may require verification
+heroku ps:scale web=x # x= number of dynos
+
+#DEPENDENCIES
+#list using
+pip freeze
+#create venv
+virtualenv venv
+source venv/bin/activate          #activate venv
+heroku pg:info                    #postgresSQL must be configured, check it
+sudo apt-get install libpq-dev    #essential lib to be installed for localization
+#install locally
+pip install -r requirements.txt
+
+#LOCAL INSTALL
+python manage.py collectstatic  #Django uses local assets, so first, you’ll need to run collectstatic
+heroku local web                #we're unix = for windows `heroku local web -f Procfile.windows`
+
+#Push local changes
+pip install -r requirements.txt #if change in dependencies occur
+heroku local                    #Reflect changes locally
+#commit changes
+git add .
+git commit -m "Demo"
+git push heroku master
+#check online for reflicitivity of changes
+heroku open
+
+
+##Provision Add-Ons
+#I don't have a verified account, so these aren't tested
+heroku addons:create papertrail #add papertrail add-on
+heroku addons                   #list add-ons
+heroku addons:open papertrail   #open papertrail
+
+##Console operations
+#launch a console on context of your app
+heroku run python manage.py shell #get real time results within shell, in context to your app
+#initiate one-off dyno, bash console
+heroku run bash
+
+##Defining config vars
+#edit views.py file -> import os and :
+#edit index function as :
+def index(request):                                   #set an env var TIMES to 3
+    times = int(os.environ.get('TIMES',3))
+    return HttpResponse('Hello! ' * times)
+#check for changes
+heroku local
+#edit in console
+heroku config:set TIMES=2
+
+#useful env var commands
+heroku config                                   #list environment variables
+heroku config:set GITHUB_USERNAME=joesmith
+heroku config:get GITHUB_USERNAME
+heroku config:unset GITHUB_USERNAME
+#find more useful comands at : https://devcenter.heroku.com/articles/config-vars
+
+##Provision Database
+#PostgreSQL info
+heroku pg
+#access db after initializing(below) as :
+https://[wonderful-app-287].herokuapp.com/db    #[YOUR_APP_URL]
+#Creating tables
+heroku run python manage.py migrate
+#access the database in `hello/models.py`by setting correct var(DATABASE_URL) in `gettingstarted/settings.py`,upon
+#accessing /db invokes `hello/views.py` each time
+#connect to remote db
+heroku pg:psql                                  #select * from hello_greeting; 
+#MORE ON POSTRESQL                :   https://devcenter.heroku.com/articles/heroku-postgresql
+#CONNECTIONG WITH MongoDB, Redis  :   https://elements.heroku.com/addons/categories/data-stores?_ga=1.201492369.1209240002.1487396237
+
+##NEXT STEPS
+#How Heroku Works                             :   https://devcenter.heroku.com/articles/how-heroku-works
+#Deploying Python and Django Apps on Heroku   :   https://devcenter.heroku.com/articles/deploying-python (learn about workers, most content is similar to here instead)
+#Python category on heroku                    :   https://devcenter.heroku.com/categories/python  (Browse periodically)
+
+
